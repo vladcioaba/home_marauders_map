@@ -4,7 +4,16 @@ A live, multi-camera Marauder's Map for your house. Detects people (and
 optionally pets) on every camera, links identities across cameras, and stamps
 sepia footprints on a parchment floor plan in real time.
 
-Built Mac-first; Raspberry Pi 5 + Hailo-10H deployment scaffolded.
+Architecture: one **central command** (Raspberry Pi 5 or a Mac mini) reads
+streams from your IP cameras and serves a local **web UI** at
+`http://<host>:8000/`. Two pages share the same parchment renderer:
+
+- **/view** — the live Marauder's Map. Watch every footstep in the house.
+- **/edit** — sketch the floor plan, drop cameras (RTSP/HTTP URL), set their
+  gaze. Save writes back to `config/house.yaml`.
+
+Built Mac-first; Raspberry Pi 5 + Hailo-10H deployment scaffolded for the
+detection backend.
 
 ## Features
 
@@ -41,17 +50,20 @@ Built Mac-first; Raspberry Pi 5 + Hailo-10H deployment scaffolded.
 ```bash
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install -e .
+
+# Web UI — the primary surface.
+marauders serve                                    # http://localhost:8000/
+marauders serve --live --config config/house.yaml  # also start tracking pipeline
+marauders serve --host 0.0.0.0 --port 8000         # expose on the LAN
+
+# Headless / debug viewer (cv2 window, no server). Backwards compat.
 marauders                        # webcam, single-cam preview
+marauders view --config config/house.yaml --names "Vlad,Hermione"
 ```
 
-### Multi-camera + floor plan
-
-```bash
-marauders --config config/house.yaml --names "Vlad,Hermione"
-```
-
-Two windows open — a tile of camera feeds with detection overlays, and the
-Marauder's Map itself with footprint trails.
+In the web UI: open **/edit** first to sketch rooms (click-drag) and place
+cameras (click → enter RTSP URL). Save. Then open **/view** (with
+`--live` running) to see footprints walking around the parchment.
 
 ### Faster on Mac
 

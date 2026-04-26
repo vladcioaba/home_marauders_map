@@ -1,0 +1,25 @@
+{% extends "_base.html" %}
+{% block title %}Marauder's Map — edit{% endblock %}
+{% block content %}
+<section class="map-shell">
+  <div class="toolbar">
+    <button data-mode="select" class="active">Select</button>
+    <button data-mode="room">+ Room</button>
+    <button data-mode="camera">+ Camera</button>
+    <button id="delete">Delete</button>
+    <span class="spacer"></span>
+    <button id="save" class="primary">Save to house.yaml</button>
+    <span id="save-status"></span>
+  </div>
+  <p class="hint">
+    <strong>Room:</strong> click and drag.
+    <strong>Camera:</strong> click to place — you'll be asked for an RTSP URL.
+    Drag a placed item to move; select then press Delete to remove.
+    <strong>Camera angle:</strong> with a camera selected, use ← / → to rotate, ↑ / ↓ to widen the FOV.
+  </p>
+  <svg id="plan" class="plan editable"></svg>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='edit.js') }}"></script>
+{% endblock %}

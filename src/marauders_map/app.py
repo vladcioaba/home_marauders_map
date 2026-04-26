@@ -213,9 +213,10 @@ def _run(
         cv2.destroyAllWindows()
 
 
-def main() -> None:
+def _main_view(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        description="Home Marauder's Map — real-time person tracking on a floor plan",
+        prog="marauders view",
+        description="cv2 viewer — single window with camera tiles + Marauder's Map",
     )
     parser.add_argument("--config", type=Path, default=None,
                         help="Path to house.yaml (enables multi-cam + floor plan + global IDs)")
@@ -255,7 +256,7 @@ def main() -> None:
                         help="Disable the appearance tiebreaker (debugging only)")
     parser.add_argument("--map-fps", type=float, default=20.0,
                         help="Cap floor-plan redraw FPS (cheaper than every frame)")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.config and args.source is not None:
         parser.error("use --config or --source, not both")
@@ -286,6 +287,69 @@ def main() -> None:
         args.device, args.imgsz, target_classes, gt_params, names,
         args.log, plan_min_dt,
     )
+
+
+def _main_serve(argv: list[str]) -> None:
+    parser = argparse.ArgumentParser(
+        prog="marauders serve",
+        description="Web UI — http://<host>:<port>/ for view + edit (primary surface)",
+    )
+    parser.add_argument("--config", type=Path, default=Path("config/house.yaml"),
+                        help="Path to house.yaml (created on first save if missing)")
+    parser.add_argument("--calibration", type=Path,
+                        default=Path("config/calibration.yaml"))
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="Bind address. Use 0.0.0.0 to expose on the LAN.")
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--live", action="store_true",
+                        help="Also start the detection loop in a background thread")
+    # Live-loop knobs — only consulted when --live is set.
+    parser.add_argument("--backend", default="ultralytics",
+                        choices=["ultralytics", "hailo"])
+    parser.add_argument("--model", default="yolov8n.pt")
+    parser.add_argument("--tracker", default="bytetrack.yaml")
+    parser.add_argument("--conf", type=float, default=0.25)
+    parser.add_argument("--device", default=None)
+    parser.add_argument("--imgsz", type=int, default=640)
+    parser.add_argument("--classes", default="person")
+    parser.add_argument("--names", default=None)
+    parser.add_argument("--max-distance-m", type=float, default=1.5)
+    parser.add_argument("--max-gap-s", type=float, default=3.0)
+    parser.add_argument("--trail-s", type=float, default=3.0)
+    parser.add_argument("--no-reid", action="store_true")
+    parser.add_argument("--log", type=Path, default=None,
+                        help="SQLite history (used only with --live)")
+    args = parser.parse_args(argv)
+
+    from marauders_map.server import serve
+
+    cal = args.calibration if args.calibration.exists() else None
+    live_kwargs = None
+    if args.live:
+        live_kwargs = {
+            "backend": args.backend, "model": args.model, "tracker": args.tracker,
+            "conf": args.conf, "device": args.device, "imgsz": args.imgsz,
+            "classes": args.classes,
+            "max_distance_m": args.max_distance_m, "max_gap_s": args.max_gap_s,
+            "trail_s": args.trail_s, "use_appearance": not args.no_reid,
+            "log_path": args.log, "names": _parse_names(args.names),
+        }
+    serve(
+        args.config, host=args.host, port=args.port, live=args.live,
+        calibration_path=cal, live_kwargs=live_kwargs,
+    )
+
+
+def main() -> None:
+    """Top-level dispatch: `marauders serve|view ...` (defaults to `view` for back-compat)."""
+    import sys
+    argv = sys.argv[1:]
+    if argv and argv[0] == "serve":
+        _main_serve(argv[1:])
+        return
+    if argv and argv[0] == "view":
+        argv = argv[1:]
+    _main_view(argv)
 
 
 if __name__ == "__main__":

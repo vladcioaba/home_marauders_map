@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+{% block title %}Marauder's Map — home{% endblock %}
+{% block content %}
+<section class="landing">
+  <h1>Welcome to the Marauder's Map</h1>
+  <p>Two doors lead from this hall:</p>
+  <div class="door-row">
+    <a class="door" href="{{ url_for('view') }}">
+      <h2>View</h2>
+      <p>The live map. Watch every footstep in the house, in real time.</p>
+    </a>
+    <a class="door" href="{{ url_for('edit') }}">
+      <h2>Edit</h2>
+      <p>Sketch the house plan. Place cameras. Set their gaze.</p>
+    </a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "_base.html" %}
+{% block title %}Marauder's Map — view{% endblock %}
+{% block content %}
+<section class="map-shell">
+  <div class="status-row">
+    <span id="status" class="status">connecting…</span>
+    <span id="fps" class="fps"></span>
+  </div>
+  <svg id="plan" class="plan"></svg>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='view.js') }}"></script>
+{% endblock %}

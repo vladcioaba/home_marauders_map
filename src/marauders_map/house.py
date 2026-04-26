@@ -1,8 +1,9 @@
-"""Loader for house layout (rooms, doors, cameras) and per-camera calibration."""
+"""Loader (and writer) for house layout: rooms, doors, cameras, calibration."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import yaml
@@ -125,3 +126,42 @@ class House:
                 floor_points=flr,
                 homography=compute_homography(img, flr),
             )
+
+
+def house_to_dict(house: House) -> dict[str, Any]:
+    """Serializable view of a House — same shape that House.load() consumes."""
+    return {
+        "floorplan": {
+            "size": list(house.floorplan.size),
+            "scale": house.floorplan.scale,
+        },
+        "rooms": [
+            {"id": r.id, "name": r.name, "rect": list(r.rect)}
+            for r in house.rooms
+        ],
+        "doors": [
+            {
+                "between": list(d.between),
+                "segment": [list(d.segment[0]), list(d.segment[1])],
+            }
+            for d in house.doors
+        ],
+        "cameras": [
+            {
+                "id": c.id,
+                "name": c.name,
+                "source": c.source,
+                "position": list(c.position),
+                "heading": c.heading,
+                "fov": c.fov,
+            }
+            for c in house.cameras
+        ],
+    }
+
+
+def dump_house(house: House, path: str | Path) -> None:
+    """Write `house` as YAML to `path` in the shape House.load() expects."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(yaml.safe_dump(house_to_dict(house), sort_keys=False))

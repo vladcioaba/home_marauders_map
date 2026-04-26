@@ -1,0 +1,102 @@
+/* Parchment + sepia ink theme. Mirrors viz.py's BGR colors translated to RGB. */
+:root {
+  --parchment: #ebd7b4;
+  --parchment-dark: #d8c198;
+  --ink-dark: #6e4628;
+  --ink-med: #966e46;
+  --ink-light: #c8a07e;
+  --cam-ink: #b48238;
+  --accent: #2a4a8a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--parchment);
+  color: var(--ink-dark);
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 2px solid var(--ink-light);
+  background: var(--parchment-dark);
+}
+.brand { color: var(--ink-dark); text-decoration: none; font-size: 22px; font-weight: bold; letter-spacing: 0.5px; }
+nav a { color: var(--ink-dark); margin-left: 16px; text-decoration: none; }
+nav a:hover { text-decoration: underline; }
+
+main { padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
+
+footer { padding: 12px 24px; text-align: center; color: var(--ink-med); font-size: 14px; border-top: 1px dashed var(--ink-light); margin-top: 24px; }
+
+.landing h1 { margin-top: 8px; font-size: 32px; }
+.door-row { display: flex; gap: 24px; margin-top: 32px; flex-wrap: wrap; }
+.door {
+  flex: 1 1 240px;
+  border: 2px solid var(--ink-med);
+  border-radius: 4px;
+  padding: 24px;
+  background: var(--parchment-dark);
+  text-decoration: none;
+  color: var(--ink-dark);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.door:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(110, 70, 40, 0.25); }
+.door h2 { margin: 0 0 8px 0; }
+
+.map-shell { display: flex; flex-direction: column; gap: 12px; }
+.plan {
+  background: var(--parchment);
+  border: 2px solid var(--ink-med);
+  border-radius: 4px;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.plan.editable { cursor: crosshair; }
+
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+button {
+  font-family: inherit;
+  background: var(--parchment-dark);
+  color: var(--ink-dark);
+  border: 1.5px solid var(--ink-med);
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+button:hover { background: var(--ink-light); }
+button.active { background: var(--ink-med); color: var(--parchment); }
+button.primary { background: var(--accent); color: var(--parchment); border-color: var(--accent); }
+button.primary:hover { filter: brightness(1.1); }
+
+.status-row { display: flex; gap: 16px; align-items: center; font-size: 14px; }
+.status { padding: 4px 10px; border-radius: 12px; background: var(--parchment-dark); }
+.status.live { background: #284a28; color: #d4e9c8; }
+.status.error { background: #6a2a2a; color: #f0d6d6; }
+.fps { color: var(--ink-med); }
+
+.hint { font-size: 14px; color: var(--ink-med); margin: 0; }
+
+#save-status { font-size: 13px; color: var(--ink-med); }
+
+/* SVG element styling */
+.room-rect { fill: rgba(216, 193, 152, 0.4); stroke: var(--ink-med); stroke-width: 2; }
+.room-rect.selected { stroke: var(--accent); stroke-width: 3; }
+.room-label { fill: var(--ink-dark); font-size: 14px; font-family: inherit; }
+.door-line { stroke: var(--parchment); stroke-width: 6; }
+.door-line-overlay { stroke: var(--ink-light); stroke-width: 1; }
+.cam-dot { fill: var(--cam-ink); }
+.cam-dot.selected { stroke: var(--accent); stroke-width: 2.5; }
+.cam-label { fill: var(--cam-ink); font-size: 12px; font-family: inherit; }
+.cam-cone { stroke: var(--cam-ink); stroke-width: 1; fill: none; opacity: 0.6; }
+.marker-foot { fill: var(--ink-dark); }
+.marker-label { fill: var(--ink-dark); font-size: 13px; font-family: inherit; }
+.trail-line { fill: none; stroke: var(--ink-med); stroke-width: 2; opacity: 0.6; }
+.pending-rect { fill: rgba(110, 70, 40, 0.15); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 4; }
