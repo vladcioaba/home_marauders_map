@@ -1,7 +1,7 @@
 """Flask web server — primary UX surface for home_marauders_map.
 
 Two pages, one shared parchment-styled SVG floor plan:
-  /view  → live Marauder's Map (polls /api/state)
+  /view  → live Marauder's Map (polls /api/state, MJPEG camera tiles)
   /edit  → drag rooms, click-place IP cameras, save (POST /api/house)
 
 Designed to be hosted on the central command (Pi or Mac mini) and accessed
@@ -10,10 +10,13 @@ in a browser at http://<host>:<port>/. Works fully offline.
 from __future__ import annotations
 
 import threading
+import time
 from pathlib import Path
 
+import cv2
+import numpy as np
 import yaml
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, Response, jsonify, render_template, request
 
 from marauders_map.house import House, dump_house, house_to_dict
 from marauders_map.live import LiveState, run_live_loop
@@ -95,6 +98,41 @@ def create_app(
     def api_get_state():
         return jsonify(app.config["LIVE_STATE"].snapshot())
 
+    @app.route("/stream/<cam_id>.mjpg")
+    def stream_camera(cam_id: str):
+        state: LiveState = app.config["LIVE_STATE"]
+
+        def gen():
+            placeholder_sent = False
+            empty_iters = 0
+            while True:
+                frame = state.latest_frame(cam_id)
+                if frame is None:
+                    if not placeholder_sent:
+                        frame = _placeholder_frame(cam_id)
+                        placeholder_sent = True
+                    else:
+                        empty_iters += 1
+                        # Stop streaming after ~5s of no frames so the browser
+                        # can fall back to its broken-image alt text.
+                        if empty_iters > 50:
+                            return
+                        time.sleep(0.1)
+                        continue
+                ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                if not ok:
+                    time.sleep(0.05)
+                    continue
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + buf.tobytes() + b"\r\n"
+                )
+                time.sleep(1.0 / 15.0)
+
+        return Response(
+            gen(), mimetype="multipart/x-mixed-replace; boundary=frame",
+        )
+
     @app.route("/api/cameras", methods=["POST"])
     def api_add_camera():
         """Append a single camera to house.yaml. Body: {id, name?, source, position?}."""
@@ -128,6 +166,24 @@ def _next_id(prefix: str, existing: set) -> str:
     while f"{prefix}{i}" in existing:
         i += 1
     return f"{prefix}{i}"
+
+
+def _placeholder_frame(cam_id: str) -> np.ndarray:
+    """A 320x240 dark frame with a 'no live feed' label. Sent before --live kicks in."""
+    img = np.full((240, 320, 3), 30, dtype=np.uint8)
+    cv2.putText(
+        img, cam_id, (12, 30),
+        cv2.FONT_HERSHEY_TRIPLEX, 0.7, (200, 200, 200), 1, cv2.LINE_AA,
+    )
+    cv2.putText(
+        img, "no live feed", (12, 130),
+        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (180, 180, 180), 1, cv2.LINE_AA,
+    )
+    cv2.putText(
+        img, "start with --live", (12, 156),
+        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (140, 140, 140), 1, cv2.LINE_AA,
+    )
+    return img
 
 
 def serve(

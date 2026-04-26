@@ -100,3 +100,18 @@ button.primary:hover { filter: brightness(1.1); }
 .marker-label { fill: var(--ink-dark); font-size: 13px; font-family: inherit; }
 .trail-line { fill: none; stroke: var(--ink-med); stroke-width: 2; opacity: 0.6; }
 .pending-rect { fill: rgba(110, 70, 40, 0.15); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 4; }
+
+/* Camera tiles below the map on /view */
+.cam-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.cam-tile {
+  background: var(--parchment-dark);
+  border: 1.5px solid var(--ink-med);
+  border-radius: 3px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cam-tile h3 { margin: 0; font-size: 14px; color: var(--ink-dark); font-weight: 600; }
+.cam-tile img { display: block; width: 320px; height: auto; background: #1a1a1a; border-radius: 2px; }
+.cam-meta { margin: 0; font-size: 11px; color: var(--ink-med); font-family: monospace; word-break: break-all; max-width: 320px; }

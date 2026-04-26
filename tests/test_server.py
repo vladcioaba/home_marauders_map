@@ -111,3 +111,42 @@ def test_static_assets_served(client):
     res = c.get("/static/common.js")
     assert res.status_code == 200
     assert b"renderHouse" in res.data
+
+
+def test_stream_returns_multipart_with_placeholder(client):
+    """Without --live, the route still emits one placeholder JPEG and closes."""
+    c, _ = client
+    res = c.get("/stream/cam0.mjpg")
+    assert res.status_code == 200
+    assert res.mimetype == "multipart/x-mixed-replace"
+    # Read enough of the stream to see the first JPEG frame and its boundary.
+    body = b""
+    for chunk in res.response:
+        body += chunk
+        if b"--frame" in body and b"\xff\xd8" in body:  # SOI marker
+            break
+        if len(body) > 200_000:
+            break
+    res.close()
+    assert b"image/jpeg" in body
+    assert b"\xff\xd8" in body  # JPEG start-of-image
+    assert b"\xff\xd9" in body  # JPEG end-of-image
+
+
+def test_stream_after_live_state_set(client):
+    """When LiveState has a frame, the stream serves it (not the placeholder)."""
+    import numpy as np
+    c, _ = client
+    state = c.application.config["LIVE_STATE"]
+    fake = np.full((48, 64, 3), 200, dtype=np.uint8)
+    state.set_frame("cam0", fake)
+
+    assert state.latest_frame("cam0") is not None
+    res = c.get("/stream/cam0.mjpg")
+    body = b""
+    for chunk in res.response:
+        body += chunk
+        if len(body) > 50_000:
+            break
+    res.close()
+    assert b"\xff\xd8" in body

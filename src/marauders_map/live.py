@@ -34,6 +34,8 @@ class LiveState:
         self._last_update: float = 0.0
         self._running: bool = False
         self._error: str | None = None
+        # Latest annotated frame per camera (BGR np.ndarray) for MJPEG streaming.
+        self._frames: dict = {}
 
     def snapshot(self) -> dict:
         with self._lock:
@@ -63,6 +65,16 @@ class LiveState:
         with self._lock:
             self._running = running
             self._error = error
+
+    def set_frame(self, cam_id: str, frame) -> None:
+        # Frame is mutated by the capture thread on next read; store a copy.
+        with self._lock:
+            self._frames[cam_id] = frame.copy()
+
+    def latest_frame(self, cam_id: str):
+        with self._lock:
+            f = self._frames.get(cam_id)
+            return None if f is None else f.copy()
 
 
 def run_live_loop(
@@ -133,7 +145,8 @@ def run_live_loop(
                 frame = cap.latest()
                 if frame is None:
                     continue
-                _, dets = process_camera(cam, frame, det, target_classes)
+                annotated, dets = process_camera(cam, frame, det, target_classes)
+                state.set_frame(cam.id, annotated)
                 all_dets.extend(dets)
 
             markers_in = [
