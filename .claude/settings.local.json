@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:linkedin.com)",
+      "Bash(python3.11 --version)",
+      "Bash(python3.12 --version)",
+      "Bash(python3.13 --version)",
+      "Bash(python3.11 -m compileall -q src scripts)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(PYTHONPATH=src python3.11 *)",
+      "Bash(python3.11 -m venv .venv)",
+      "Bash(.venv/bin/pip install *)",
+      "Read(//usr/local/Cellar/python@3.11/3.11.14_1/Frameworks/Python.framework/Versions/3.11/bin/**)",
+      "Bash(/Users/Vlad/Work/camera_movement_tracker/.venv/bin/python --version)",
+      "Bash(/Users/Vlad/Work/camera_movement_tracker/.venv/bin/pip install *)",
+      "Bash(.venv/bin/cmt --help)",
+      "Bash(.venv/bin/python -c \"import platform; print\\('machine:', platform.machine\\(\\)\\); print\\('python arch:', platform.architecture\\(\\)\\)\")",
+      "Bash(chmod +x /Users/Vlad/Work/camera_movement_tracker/scripts/deploy_to_pi.sh)",
+      "Bash(chmod +x /Users/Vlad/Work/camera_movement_tracker/scripts/replay.py)",
+      "Bash(python3.11 -m compileall -q scripts/replay.py)",
+      "Bash(echo \"compile: $?\")",
+      "Bash(python3.11 -m compileall -q src)",
+      "Bash(timeout 8 .venv/bin/cmt)",
+      "Bash(echo \"---exit: $?\")",
+      "Bash(gtimeout 8 .venv/bin/cmt)",
+      "Bash(.venv/bin/cmt --source nonexistent.mp4)",
+      "Bash(python3 *)",
+      "Bash(mv /Users/Vlad/Work/camera_movement_tracker/src/cmt /Users/Vlad/Work/camera_movement_tracker/src/marauders_map)",
+      "Bash(rm -rf /Users/Vlad/Work/camera_movement_tracker/src/home_marauders_map.egg-info /Users/Vlad/Work/camera_movement_tracker/src/camera_movement_tracker.egg-info)",
+      "Bash(mv /Users/Vlad/Work/camera_movement_tracker /Users/Vlad/Work/home_marauders_map)",
+      "Read(//Users/Vlad/Work/**)"
+    ]
+  }
+}

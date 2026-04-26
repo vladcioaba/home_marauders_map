@@ -1,0 +1,38 @@
+# House layout — hand-authored. The calibration tool writes to a separate
+# file (config/calibration.yaml) so running it never clobbers your comments.
+#
+# Units are meters. Origin (0,0) is the top-left of the floor plan, x goes
+# right, y goes down (matches screen/image coordinates).
+
+floorplan:
+  size: [12.0, 8.0]   # width x height in meters
+  scale: 60           # pixels per meter when rendered
+
+rooms:
+  - {id: living_room, name: Living room, rect: [0, 0,  6, 5]}
+  - {id: kitchen,     name: Kitchen,     rect: [6, 0,  6, 5]}
+  - {id: hallway,     name: Hallway,     rect: [0, 5, 12, 3]}
+
+# Each door is a line segment on the floor plan joining two rooms. Drawn in
+# white over the room boundaries so the opening is visible.
+doors:
+  - {between: [living_room, kitchen], segment: [[6, 1.5], [6, 2.5]]}
+  - {between: [living_room, hallway], segment: [[2, 5  ], [4, 5  ]]}
+  - {between: [kitchen,     hallway], segment: [[8, 5  ], [10, 5 ]]}
+
+cameras:
+  - id: cam0
+    name: Webcam
+    source: 0
+    # Placement on the floor plan (for visualization). The homography from
+    # scripts/calibrate.py is what actually maps detections to world coords.
+    position: [2.0, 1.5]
+    heading: 135        # degrees: 0=+x (right), 90=+y (down)
+    fov: 78             # full horizontal angle
+
+  # - id: cam1
+  #   name: Kitchen cam
+  #   source: samples/kitchen.mp4
+  #   position: [9.0, 2.5]
+  #   heading: 180
+  #   fov: 90

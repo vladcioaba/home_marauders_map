@@ -1,0 +1,49 @@
+[project]
+name = "home-marauders-map"
+version = "0.1.0"
+description = "Real-time multi-camera person tracking on a Marauder's-Map-style floor plan"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ultralytics>=8.3",
+    # torch stopped shipping x86_64 macOS wheels after 2.2.2, and that
+    # line is built against numpy 1.x. Pinning numpy<2 + a matching
+    # opencv makes the stack coherent on both arm64 and x86_64 Macs.
+    "numpy<2",
+    "opencv-python>=4.10,<4.11",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+marauders = "marauders_map.app:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E501",  # line length is enforced by line-length, but YAML lines may exceed
+    "B008",  # function default arg call (Path()) is intentional in CLI
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B"]

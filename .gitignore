@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.env
+
+# Model weights (auto-downloaded by ultralytics)
+*.pt
+*.onnx
+*.hef
+yolov8n.pt
+yolov8n-pose.pt
+
+# Databases / runtime outputs
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# OS junk
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
