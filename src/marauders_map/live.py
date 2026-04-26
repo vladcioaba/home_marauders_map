@@ -137,9 +137,57 @@ def run_live_loop(
 
     fps_ema: float | None = None
     min_dt = 1.0 / max(1.0, target_fps)
+
+    def _mtime(p: Path | None) -> float:
+        try:
+            return p.stat().st_mtime if (p and p.exists()) else 0.0
+        except OSError:
+            return 0.0
+
+    house_mtime = _mtime(house_path)
+    cal_mtime = _mtime(calibration_path)
+    last_check = 0.0
+
     try:
         while True:
             t0 = time.time()
+
+            # Hot-reload calibration / camera placement at most once per second.
+            if t0 - last_check > 1.0:
+                last_check = t0
+                new_house_mt = _mtime(house_path)
+                new_cal_mt = _mtime(calibration_path)
+                if new_house_mt != house_mtime or new_cal_mt != cal_mtime:
+                    try:
+                        reloaded = House.load(
+                            house_path, calibration_path=calibration_path,
+                        )
+                        new_by_id = {c.id: c for c in reloaded.cameras}
+                        applied = 0
+                        for cam in cameras:
+                            nc = new_by_id.get(cam.id)
+                            if nc is None:
+                                continue
+                            cam.calibration = nc.calibration
+                            cam.position = nc.position
+                            cam.heading = nc.heading
+                            cam.fov = nc.fov
+                            if nc.calibration.homography is not None:
+                                applied += 1
+                        # Use the reloaded house for room_at lookups; keep the
+                        # original `cameras` list so capture/detector indices
+                        # stay valid even if the new yaml added/removed cams.
+                        house = reloaded
+                        house_mtime = new_house_mt
+                        cal_mtime = new_cal_mt
+                        print(
+                            f"[live] reloaded house ({applied}/{len(cameras)} "
+                            f"cameras calibrated)",
+                            flush=True,
+                        )
+                    except Exception as e:
+                        print(f"[live] reload failed: {e}", flush=True)
+
             all_dets = []
             for cam, cap, det in zip(cameras, captures, detectors):
                 frame = cap.latest()

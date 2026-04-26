@@ -323,7 +323,10 @@ def _main_serve(argv: list[str]) -> None:
 
     from marauders_map.server import serve
 
-    cal = args.calibration if args.calibration.exists() else None
+    # Pass the path even if the file doesn't exist yet — the live loop's
+    # watcher needs it so that creating calibration.yaml later (e.g. via the
+    # editor's POST /api/calibration) triggers a hot-reload.
+    cal = args.calibration
     live_kwargs = None
     if args.live:
         live_kwargs = {
