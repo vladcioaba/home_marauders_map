@@ -18,6 +18,12 @@
     <strong>Camera angle:</strong> with a camera selected, use ← / → to rotate, ↑ / ↓ to widen the FOV.
   </p>
   <svg id="plan" class="plan editable"></svg>
+  <div id="cam-info" class="cam-info" style="display: none;">
+    <span>Selected camera: <code id="cam-info-id"></code></span>
+    <span class="hint" id="cam-info-source"></span>
+    <span class="spacer"></span>
+    <a id="calibrate-link" class="primary" href="#">Calibrate →</a>
+  </div>
 </section>
 {% endblock %}
 {% block scripts %}

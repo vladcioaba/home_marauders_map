@@ -1,0 +1,42 @@
+{% extends "_base.html" %}
+{% block title %}Calibrate {{ cam_id }}{% endblock %}
+{% block content %}
+<section class="calibrate-shell" data-cam-id="{{ cam_id }}">
+  <h1>Calibrate <code>{{ cam_id }}</code></h1>
+  <p class="hint">
+    Click matching pairs (≥ 4): first a landmark on the camera image (corner of
+    a rug, base of a doorframe), then the same spot on the floor plan. The more
+    spread-out the pairs, the better the homography. Save when you're happy.
+  </p>
+  <div class="cal-mode">
+    Next click: <strong><span id="next-target">image</span></strong>
+  </div>
+  <div class="cal-grid">
+    <div class="cal-panel">
+      <h3>Camera</h3>
+      <div class="cal-image-wrap">
+        <img id="frame" src="/api/frame/{{ cam_id }}.jpg" alt="frame">
+        <svg id="frame-overlay" class="cal-overlay"></svg>
+      </div>
+      <button id="refresh">Refresh frame</button>
+      <span id="frame-status" class="hint"></span>
+    </div>
+    <div class="cal-panel">
+      <h3>Floor plan</h3>
+      <svg id="plan" class="plan editable"></svg>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button id="undo">Undo last</button>
+    <button id="clear">Clear all</button>
+    <span class="spacer"></span>
+    <span id="pair-count">0 pairs</span>
+    <button id="save" class="primary">Save calibration</button>
+    <span id="save-status"></span>
+  </div>
+  <p><a href="{{ url_for('edit') }}">← back to edit</a></p>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='calibrate.js') }}"></script>
+{% endblock %}

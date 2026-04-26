@@ -115,3 +115,58 @@ button.primary:hover { filter: brightness(1.1); }
 .cam-tile h3 { margin: 0; font-size: 14px; color: var(--ink-dark); font-weight: 600; }
 .cam-tile img { display: block; width: 320px; height: auto; background: #1a1a1a; border-radius: 2px; }
 .cam-meta { margin: 0; font-size: 11px; color: var(--ink-med); font-family: monospace; word-break: break-all; max-width: 320px; }
+
+/* Calibration page */
+.cal-mode {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--parchment-dark);
+  border-radius: 3px;
+  font-size: 16px;
+  margin: 8px 0;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+.cal-panel {
+  background: var(--parchment-dark);
+  border: 1.5px solid var(--ink-med);
+  border-radius: 3px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cal-panel h3 { margin: 0; }
+.cal-image-wrap { position: relative; line-height: 0; }
+.cal-image-wrap img { display: block; width: 100%; height: auto; cursor: crosshair; }
+.cal-overlay {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.cal-panel .plan { cursor: crosshair; }
+
+/* Selected-camera info panel on /edit */
+.cam-info {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--parchment-dark);
+  border: 1px solid var(--ink-med);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.cam-info code { font-family: monospace; color: var(--ink-dark); }
+.cam-info a.primary {
+  background: var(--accent);
+  color: var(--parchment);
+  padding: 4px 10px;
+  border-radius: 3px;
+  text-decoration: none;
+}
+.cam-info a.primary:hover { filter: brightness(1.1); }

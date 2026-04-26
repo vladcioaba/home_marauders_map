@@ -150,3 +150,80 @@ def test_stream_after_live_state_set(client):
             break
     res.close()
     assert b"\xff\xd8" in body
+
+
+def test_calibrate_page_loads(client):
+    c, _ = client
+    res = c.get("/calibrate/cam0")
+    assert res.status_code == 200
+    assert b"Calibrate" in res.data
+    assert b"cam0" in res.data
+    assert b"frame-overlay" in res.data
+
+
+def test_api_frame_503_when_no_live_data(client):
+    c, _ = client
+    res = c.get("/api/frame/cam0.jpg")
+    assert res.status_code == 503
+    assert "no live frame" in res.get_json()["error"]
+
+
+def test_api_frame_returns_jpeg_when_live(client):
+    import numpy as np
+    c, _ = client
+    state = c.application.config["LIVE_STATE"]
+    state.set_frame("cam0", np.full((48, 64, 3), 200, dtype=np.uint8))
+    res = c.get("/api/frame/cam0.jpg")
+    assert res.status_code == 200
+    assert res.mimetype == "image/jpeg"
+    assert res.data[:2] == b"\xff\xd8"  # JPEG SOI
+
+
+def test_calibration_save_writes_yaml_and_loads(client):
+    import yaml as yamllib
+    c, path = client
+    payload = {
+        "cam_id": "cam0",
+        "image_points": [[100, 100], [500, 100], [500, 400], [100, 400]],
+        "floor_points": [[1.0, 1.0], [3.0, 1.0], [3.0, 3.0], [1.0, 3.0]],
+    }
+    res = c.post("/api/calibration", json=payload)
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["ok"] is True
+    assert body["pairs"] == 4
+
+    cal_path = path.parent / "calibration.yaml"
+    assert cal_path.exists()
+    data = yamllib.safe_load(cal_path.read_text())
+    assert data["cameras"]["cam0"]["image"][0] == [100.0, 100.0]
+    assert data["cameras"]["cam0"]["floor"][2] == [3.0, 3.0]
+
+
+def test_calibration_rejects_too_few_pairs(client):
+    c, _ = client
+    res = c.post("/api/calibration", json={
+        "cam_id": "cam0",
+        "image_points": [[0, 0], [1, 0]],
+        "floor_points": [[0, 0], [1, 0]],
+    })
+    assert res.status_code == 400
+
+
+def test_calibration_rejects_mismatched_lengths(client):
+    c, _ = client
+    res = c.post("/api/calibration", json={
+        "cam_id": "cam0",
+        "image_points": [[0, 0], [1, 0], [2, 0], [3, 0]],
+        "floor_points": [[0, 0], [1, 0], [2, 0]],
+    })
+    assert res.status_code == 400
+
+
+def test_calibration_rejects_missing_cam_id(client):
+    c, _ = client
+    res = c.post("/api/calibration", json={
+        "image_points": [[0, 0]] * 4,
+        "floor_points": [[0, 0]] * 4,
+    })
+    assert res.status_code == 400

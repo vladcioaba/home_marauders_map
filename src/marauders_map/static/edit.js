@@ -13,6 +13,23 @@
   let dragging = null;   // { kind, index, anchorX, anchorY, origRect|origPos }
   let pendingRect = null; // { x0, y0, x1, y1 } in meters
 
+  const camInfo = document.getElementById("cam-info");
+  const camInfoId = document.getElementById("cam-info-id");
+  const camInfoSource = document.getElementById("cam-info-source");
+  const calibrateLink = document.getElementById("calibrate-link");
+
+  function updateCamInfo() {
+    if (selected && selected.kind === "camera") {
+      const c = house.cameras[selected.index];
+      camInfoId.textContent = c.id;
+      camInfoSource.textContent = `(${c.source})`;
+      calibrateLink.href = `/calibrate/${encodeURIComponent(c.id)}`;
+      camInfo.style.display = "flex";
+    } else {
+      camInfo.style.display = "none";
+    }
+  }
+
   function rerender() {
     MM.renderHouse(svg, house, { selected });
     if (pendingRect) {
@@ -26,6 +43,7 @@
         x, y, width: w, height: h, class: "pending-rect",
       }));
     }
+    updateCamInfo();
   }
 
   function setMode(next) {

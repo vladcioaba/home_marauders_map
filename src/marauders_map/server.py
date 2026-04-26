@@ -73,6 +73,10 @@ def create_app(
     def edit():
         return render_template("edit.html")
 
+    @app.route("/calibrate/<cam_id>")
+    def calibrate_page(cam_id: str):
+        return render_template("calibrate.html", cam_id=cam_id)
+
     @app.route("/api/house", methods=["GET"])
     def api_get_house():
         return jsonify(_read_house_dict(app.config["HOUSE_PATH"]))
@@ -97,6 +101,48 @@ def create_app(
     @app.route("/api/state")
     def api_get_state():
         return jsonify(app.config["LIVE_STATE"].snapshot())
+
+    @app.route("/api/frame/<cam_id>.jpg")
+    def api_frame(cam_id: str):
+        """Single JPEG snapshot of the latest annotated frame for a camera."""
+        state: LiveState = app.config["LIVE_STATE"]
+        frame = state.latest_frame(cam_id)
+        if frame is None:
+            return jsonify({
+                "error": (
+                    f"no live frame for {cam_id} — start with "
+                    "`marauders serve --live` and ensure the camera is reachable"
+                ),
+            }), 503
+        ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        if not ok:
+            return jsonify({"error": "encode failed"}), 500
+        return Response(buf.tobytes(), mimetype="image/jpeg")
+
+    @app.route("/api/calibration", methods=["POST"])
+    def api_calibration():
+        """Save matched (image, floor) pairs for a camera into calibration.yaml."""
+        data = request.get_json(force=True, silent=True) or {}
+        cam_id = data.get("cam_id")
+        img_pts = data.get("image_points")
+        flr_pts = data.get("floor_points")
+        if not cam_id or not isinstance(img_pts, list) or not isinstance(flr_pts, list):
+            return jsonify({
+                "error": "expected fields: cam_id (str), image_points (list), floor_points (list)",
+            }), 400
+        if len(img_pts) < 4 or len(img_pts) != len(flr_pts):
+            return jsonify({
+                "error": (
+                    f"need >=4 matched pairs of equal length "
+                    f"(got {len(img_pts)} image, {len(flr_pts)} floor)"
+                ),
+            }), 400
+        cal_path = (
+            app.config.get("CALIBRATION_PATH")
+            or app.config["HOUSE_PATH"].parent / "calibration.yaml"
+        )
+        _save_calibration(Path(cal_path), cam_id, img_pts, flr_pts)
+        return jsonify({"ok": True, "path": str(cal_path), "pairs": len(img_pts)})
 
     @app.route("/stream/<cam_id>.mjpg")
     def stream_camera(cam_id: str):
@@ -166,6 +212,30 @@ def _next_id(prefix: str, existing: set) -> str:
     while f"{prefix}{i}" in existing:
         i += 1
     return f"{prefix}{i}"
+
+
+def _save_calibration(
+    path: Path, cam_id: str, img_pts: list, flr_pts: list,
+) -> None:
+    """Append/overwrite a camera's pairs in calibration.yaml.
+
+    Format matches House._apply_calibration's reader:
+      cameras:
+        <cam_id>:
+          image: [[x, y], ...]
+          floor: [[x, y], ...]
+    """
+    if path.exists():
+        data = yaml.safe_load(path.read_text()) or {}
+    else:
+        data = {}
+    cams = data.setdefault("cameras", {})
+    cams[cam_id] = {
+        "image": [[float(p[0]), float(p[1])] for p in img_pts],
+        "floor": [[float(p[0]), float(p[1])] for p in flr_pts],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data, sort_keys=False))
 
 
 def _placeholder_frame(cam_id: str) -> np.ndarray:
